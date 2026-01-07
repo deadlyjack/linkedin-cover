@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8" />
+  <title>LinkedIn Cover</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
+
+    body {
+      margin: 0;
+      padding: 40px;
+      background: #0f172a;
+      font-family: Inter, system-ui, -apple-system, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+      min-height: 100vh;
+      box-sizing: border-box;
+    }
+
+    .canvas-container {
+      width: 100%;
+      max-width: 1584px;
+      aspect-ratio: 1584 / 396;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      border-radius: 8px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    }
+
+    .controls {
+      display: flex;
+      gap: 12px;
+    }
+
+    .download-btn {
+      padding: 14px 32px;
+      font-size: 16px;
+      font-weight: 600;
+      font-family: Inter, system-ui, sans-serif;
+      background: linear-gradient(135deg, #38bdf8, #0ea5e9);
+      color: #020617;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 16px rgba(56, 189, 248, 0.3);
+    }
+
+    .download-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(56, 189, 248, 0.4);
+    }
+
+    .download-btn:active {
+      transform: translateY(0);
+    }
+
+    .info {
+      color: #64748b;
+      font-size: 14px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="canvas-container">
+    <canvas id="cover" width="1584" height="396"></canvas>
+  </div>
+
+  <div class="controls">
+    <button class="download-btn" onclick="downloadCover('png')">Download PNG</button>
+    <button class="download-btn" onclick="downloadCover('jpeg')">Download JPEG</button>
+  </div>
+
+  <p class="info">LinkedIn recommended cover size: 1584 × 396 pixels</p>
+
+  <script>
+    const canvas = document.getElementById('cover');
+    const ctx = canvas.getContext('2d');
+    const WIDTH = 1584;
+    const HEIGHT = 396;
+
+    // Images to load
+    const images = {
+      acode: { src: 'acode.jpg', img: null },
+      betterKeep: { src: 'better-keep.jpg', img: null },
+      acodeLogo: { src: 'acode-logo.png', img: null },
+      betterKeepLogo: { src: 'betterkeep-logo.png', img: null },
+      // Social icons from Simple Icons CDN
+      instagram: { src: 'https://cdn.simpleicons.org/instagram/94a3b8', img: null },
+      github: { src: 'https://cdn.simpleicons.org/github/94a3b8', img: null },
+      x: { src: 'https://cdn.simpleicons.org/x/94a3b8', img: null },
+      website: { src: 'https://cdn.simpleicons.org/safari/94a3b8', img: null }
+    };
+
+    // Social links data
+    const socialLinks = [
+      { icon: 'instagram', text: 'ajitkumar.dev' },
+      { icon: 'github', text: 'deadlyjack' },
+      { icon: 'x', text: 'ajitkumar_dev' },
+      { icon: 'website', text: 'ajitkumar.dev' }
+    ];
+
+    // Load all images first
+    function loadImages() {
+      const promises = Object.values(images).map(item => {
+        return new Promise((resolve, reject) => {
+          const img = new Image();
+          img.crossOrigin = 'anonymous';
+          img.onload = () => {
+            item.img = img;
+            resolve();
+          };
+          img.onerror = () => {
+            console.warn(`Failed to load ${item.src}`);
+            resolve(); // Continue even if image fails
+          };
+          img.src = item.src;
+        });
+      });
+      return Promise.all(promises);
+    }
+
+    function drawCover() {
+      // Background gradient
+      const bgGradient = ctx.createLinearGradient(0, 0, WIDTH, HEIGHT);
+      bgGradient.addColorStop(0, '#020617');
+      bgGradient.addColorStop(1, '#0f172a');
+      ctx.fillStyle = bgGradient;
+      ctx.fillRect(0, 0, WIDTH, HEIGHT);
+
+      // Radial gradient overlay at top right
+      const radialGradient = ctx.createRadialGradient(WIDTH, 0, 0, WIDTH, 0, WIDTH * 0.6);
+      radialGradient.addColorStop(0, 'rgba(30, 41, 59, 0.8)');
+      radialGradient.addColorStop(1, 'transparent');
+      ctx.fillStyle = radialGradient;
+      ctx.fillRect(0, 0, WIDTH, HEIGHT);
+
+      // Draw floating code doodles in background
+      drawCodeDoodles();
+
+      // Left text content
+      const leftPadding = 60;
+      const topPadding = 40;
+
+      // Experience badge
+      ctx.fillStyle = '#1e293b';
+      ctx.font = '600 14px Inter, system-ui, sans-serif';
+      const expText = '7+ Years Experience';
+      const expWidth = ctx.measureText(expText).width + 24;
+      const expHeight = 28;
+      const expX = leftPadding;
+      const expY = topPadding;
+
+      // Draw badge background
+      ctx.beginPath();
+      roundRect(ctx, expX, expY, expWidth, expHeight, 14);
+      ctx.fillStyle = 'rgba(56, 189, 248, 0.15)';
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(56, 189, 248, 0.3)';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+
+      // Badge text
+      ctx.fillStyle = '#38bdf8';
+      ctx.font = '600 13px Inter, system-ui, sans-serif';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(expText, expX + 12, expY + expHeight / 2);
+      ctx.textBaseline = 'top';
+
+      // Title
+      ctx.fillStyle = '#ffffff';
+      ctx.font = '700 52px Inter, system-ui, sans-serif';
+      ctx.textBaseline = 'top';
+      ctx.fillText('Software Developer', leftPadding, topPadding + 40);
+
+      // Subtitle
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '400 22px Inter, system-ui, sans-serif';
+      ctx.fillText('Cross-platform apps • Open source • Scalable products', leftPadding, topPadding + 108);
+
+      // Tag
+      ctx.fillStyle = '#38bdf8';
+      ctx.font = '400 18px Inter, system-ui, sans-serif';
+      ctx.fillText('Building apps used by millions', leftPadding, topPadding + 160);
+
+      // Social links
+      drawSocialLinks(leftPadding, topPadding + 210);
+
+      // Right side - Cards
+      const cardHeight = 260;
+      const cardGap = 8;
+      const rightPadding = 60;
+
+      // Calculate actual widths based on image aspect ratios
+      let acode = images.acode.img;
+      let betterKeep = images.betterKeep.img;
+
+      const acodeWidth = acode ? cardHeight * (acode.width / acode.height) : 150;
+      const betterKeepWidth = betterKeep ? cardHeight * (betterKeep.width / betterKeep.height) : 150;
+
+      const totalWidth = acodeWidth + cardGap + betterKeepWidth;
+      const cardsStartX = WIDTH - rightPadding - totalWidth;
+      const cardsY = (HEIGHT - cardHeight - 30) / 2;
+
+      // Draw cards with rounded corners and app names
+      drawCard(cardsStartX, cardsY, acodeWidth, cardHeight, images.acode.img, 'Acode Editor', images.acodeLogo.img);
+      drawCard(cardsStartX + acodeWidth + cardGap, cardsY, betterKeepWidth, cardHeight, images.betterKeep.img, 'Better Keep', images.betterKeepLogo.img);
+    }
+
+    function drawCard(x, y, width, height, img, appName, logo) {
+      // Draw image if loaded
+      if (img) {
+        // Contain fit - show full image without cropping
+        const imgRatio = img.width / img.height;
+        const cardRatio = width / height;
+
+        let drawWidth, drawHeight, drawX, drawY;
+
+        if (imgRatio > cardRatio) {
+          // Image is wider - fit by width
+          drawWidth = width;
+          drawHeight = width / imgRatio;
+          drawX = x;
+          drawY = y + (height - drawHeight) / 2;
+        } else {
+          // Image is taller - fit by height
+          drawHeight = height;
+          drawWidth = height * imgRatio;
+          drawX = x + (width - drawWidth) / 2;
+          drawY = y;
+        }
+
+        // Draw with rounded corners
+        const radius = 20;
+        ctx.save();
+        ctx.beginPath();
+        roundRect(ctx, drawX, drawY, drawWidth, drawHeight, radius);
+        ctx.clip();
+        ctx.drawImage(img, drawX, drawY, drawWidth, drawHeight);
+        ctx.restore();
+      }
+
+      // Draw app name with logo below
+      const logoHeight = 20;
+      const textGap = 6;
+      ctx.font = '400 14px Inter, system-ui, sans-serif';
+      const textWidth = ctx.measureText(appName).width;
+      const textHeight = 14; // Font size
+
+      // Calculate logo width maintaining aspect ratio
+      let logoWidth = logoHeight;
+      if (logo) {
+        const logoRatio = logo.width / logo.height;
+        logoWidth = logoHeight * logoRatio;
+      }
+
+      const totalWidth = logo ? logoWidth + textGap + textWidth : textWidth;
+      const startX = x + (width - totalWidth) / 2;
+      const labelY = y + height + 12;
+
+      if (logo) {
+        // Draw logo maintaining aspect ratio, vertically centered with text
+        const logoY = labelY + (textHeight - logoHeight) / 2;
+        ctx.drawImage(logo, startX, logoY, logoWidth, logoHeight);
+      }
+
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '400 14px Inter, system-ui, sans-serif';
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'top';
+      ctx.fillText(appName, logo ? startX + logoWidth + textGap : startX, labelY);
+    }
+
+    function drawSocialLinks(x, y) {
+      const iconSize = 18;
+      const textGap = 8;
+      const itemGap = 24;
+      let currentX = x;
+
+      ctx.font = '400 16px Inter, system-ui, sans-serif';
+      ctx.fillStyle = '#94a3b8';
+      ctx.textBaseline = 'middle';
+
+      for (const link of socialLinks) {
+        const icon = images[link.icon].img;
+        const textWidth = ctx.measureText(link.text).width;
+
+        if (icon) {
+          ctx.drawImage(icon, currentX, y - iconSize / 2, iconSize, iconSize);
+        }
+
+        ctx.fillText(link.text, currentX + iconSize + textGap, y);
+        currentX += iconSize + textGap + textWidth + itemGap;
+      }
+
+      ctx.textBaseline = 'top';
+    }
+
+    function drawCodeDoodles() {
+      const doodles = [
+        // Format: { symbol, x, y, size, opacity, rotation }
+        // Left side scattered doodles
+        { symbol: '{', x: 30, y: 60, size: 36, opacity: 0.15, rotation: -10 },
+        { symbol: '}', x: 50, y: 180, size: 32, opacity: 0.12, rotation: 15 },
+        { symbol: '</>', x: 40, y: 300, size: 28, opacity: 0.14, rotation: -5 },
+        { symbol: '( )', x: 25, y: 350, size: 26, opacity: 0.10, rotation: 8 },
+        // Middle area (behind text, subtle)
+        { symbol: '[ ]', x: 480, y: 40, size: 24, opacity: 0.08, rotation: -12 },
+        { symbol: '//', x: 520, y: 350, size: 30, opacity: 0.10, rotation: 5 },
+        { symbol: '++', x: 420, y: 80, size: 22, opacity: 0.08, rotation: -8 },
+        { symbol: '=>', x: 580, y: 100, size: 26, opacity: 0.10, rotation: 10 },
+        { symbol: '&&', x: 620, y: 300, size: 24, opacity: 0.09, rotation: -15 },
+        { symbol: '{ }', x: 700, y: 50, size: 28, opacity: 0.12, rotation: 12 },
+        { symbol: '/*', x: 750, y: 150, size: 26, opacity: 0.10, rotation: -8 },
+        { symbol: '*/', x: 680, y: 350, size: 26, opacity: 0.09, rotation: 6 },
+        { symbol: '===', x: 800, y: 80, size: 22, opacity: 0.08, rotation: -5 },
+        { symbol: '||', x: 850, y: 320, size: 28, opacity: 0.11, rotation: 15 },
+        { symbol: '< >', x: 900, y: 200, size: 24, opacity: 0.09, rotation: -10 },
+        // Upper right area
+        { symbol: '#', x: 950, y: 60, size: 24, opacity: 0.10, rotation: 15 },
+        { symbol: '@', x: 980, y: 280, size: 22, opacity: 0.08, rotation: -8 },
+        { symbol: '0x', x: 920, y: 120, size: 20, opacity: 0.09, rotation: 5 },
+        { symbol: ';', x: 870, y: 250, size: 26, opacity: 0.11, rotation: -12 },
+        { symbol: '::', x: 780, y: 220, size: 22, opacity: 0.08, rotation: 10 },
+      ];
+
+      ctx.save();
+
+      for (const d of doodles) {
+        ctx.save();
+        ctx.translate(d.x, d.y);
+        ctx.rotate((d.rotation * Math.PI) / 180);
+        ctx.font = `600 ${d.size}px "Fira Code", "SF Mono", Consolas, monospace`;
+        ctx.fillStyle = `rgba(148, 163, 184, ${d.opacity})`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(d.symbol, 0, 0);
+        ctx.restore();
+      }
+
+      ctx.restore();
+    }
+
+    function roundRect(ctx, x, y, width, height, radius) {
+      ctx.moveTo(x + radius, y);
+      ctx.lineTo(x + width - radius, y);
+      ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+      ctx.lineTo(x + width, y + height - radius);
+      ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+      ctx.lineTo(x + radius, y + height);
+      ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+      ctx.lineTo(x, y + radius);
+      ctx.quadraticCurveTo(x, y, x + radius, y);
+      ctx.closePath();
+    }
+
+    function downloadCover(format) {
+      const link = document.createElement('a');
+      link.download = `linkedin-cover.${format}`;
+
+      if (format === 'jpeg') {
+        link.href = canvas.toDataURL('image/jpeg', 1.0);
+      } else {
+        link.href = canvas.toDataURL('image/png');
+      }
+
+      link.click();
+    }
+
+    // Initialize
+    async function init() {
+      await loadImages();
+      drawCover();
+    }
+
+    // Wait for fonts to load
+    document.fonts.ready.then(init);
+  </script>
+</body>
+
+</html>
